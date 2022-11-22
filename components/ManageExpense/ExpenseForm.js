@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import Button from "../ui/Button";
 import Input from "./Input";
 
-const ExpenseForm = () => {
+const ExpenseForm = ({onCancel, onSubmit, isEditing, defaultValue}) => {
   const [inputValues, setinputValues] = useState({
-    amount: "",
-    date: "",
-    description: "",
+    amount: defaultValue ? defaultValue.amount.toString() : '',
+    date: defaultValue ? defaultValue.date.toISOString().slice(0, 10) : '',
+    description: defaultValue ? defaultValue.description: '',
   });
 
   function inputChangedHandler(inputIdentifier, enteredValue) {
@@ -16,6 +17,25 @@ const ExpenseForm = () => {
         [inputIdentifier]: enteredValue,
       };
     });
+  }
+
+  function submitHandler() {
+    const expenseData = {
+        amount: +inputValues.amount,
+        date: new Date(inputValues.date),
+        description: inputValues.description
+    }
+
+    const amountIsValid = !isNaN(expenseData) && expenseData.amount > 0
+    const dateIsValid = expenseData.date.toString() !== 'Invalid Date'
+    const descriptionIsValid = expenseData.description.trim().length > 0;
+
+    if(!amountIsValid || !dateIsValid || !descriptionIsValid) {
+        Alert.alert('Invalid Input')
+        return;
+    }
+
+    onSubmit(expenseData)
   }
 
   return (
@@ -50,6 +70,14 @@ const ExpenseForm = () => {
           value: inputValues.description,
         }}
       />
+      <View style={styles.buttons}>
+        <Button style={styles.button} mode="flat" onPress={onCancel}>
+          Cancel
+        </Button>
+        <Button style={styles.button} onPress={submitHandler}>
+          {isEditing ? "Update" : "Add"}
+        </Button>
+      </View>
     </View>
   );
 };
@@ -73,5 +101,14 @@ const styles = StyleSheet.create({
   },
   rowInput: {
     flex: 1,
+  },
+  buttons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  button: {
+    minWidth: 120,
+    marginHorizontal: 8,
   },
 });
